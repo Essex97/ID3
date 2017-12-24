@@ -49,7 +49,7 @@ public class Car {
         return category;
     }
 
-    /*public String getValueOf(String attribute){
+    public String getValueOf(String attribute){
         if(attribute.equals("buying"))
             return getBuying();
         else if(attribute.equals("maint"))
@@ -64,7 +64,7 @@ public class Car {
             return getSafety();
         }
         return null;
-    }*/
+    }
 
 
 }

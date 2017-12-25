@@ -127,79 +127,104 @@ public class Main {
     //returns the InformationGain of this attribute
     //remember IG(C,X) = H(C) - ΣP(X=x)*H(C|X=x) where H is entropy and C the category
     public static double calcIG(ArrayList<Car> data, String attribute){
-
+        System.out.println("IG");
         double entropy = calcEntropy(data); //This is H(C) on the type
 
         ArrayList<String> attributeValues = getAttributeValues(attribute); //Values of the given attribute
 
-        ArrayList<ArrayList<Car>> sortedData = new ArrayList<ArrayList<Car>>(); //Data sorted by value of the given attribute
+        //ArrayList<ArrayList<Car>> sortedData = new ArrayList<ArrayList<Car>>(); //Data sorted by value of the given attribute
+        ArrayList<Car> [] sortedData = new ArrayList[4]; //4 is the max sum of values
+        for (int i = 0; i < sortedData.length; i++) {
+            sortedData[i] = new ArrayList<>();
+        }
+
         //Each ArrayList will contain data with same value at given attribute
         for(Car tempcar : data){
 
             if(attribute.equals("buying")){
-
                 if(tempcar.getBuying().equals("low")){
-                    sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with buying = low
+                    //sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with buying = low
+                    sortedData[0].add(tempcar);
                 }else if(tempcar.getBuying().equals("med")){
-                    sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with buying = med
+                    //sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with buying = med
+                    sortedData[1].add(tempcar);
                 }else if(tempcar.getBuying().equals("high")){
-                    sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with buying = high
+                    //sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with buying = high
+                    sortedData[2].add(tempcar);
                 }else if(tempcar.getBuying().equals("vhigh")){
-                    sortedData.get(3).add(tempcar);           // The Inside ArrayList with index 3 contains all the cars with buying = vhigh
+                    //sortedData.get(3).add(tempcar);           // The Inside ArrayList with index 3 contains all the cars with buying = vhigh
+                    sortedData[3].add(tempcar);
                 }
 
             }else if(attribute.equals("maint")){
 
                 if(tempcar.getMaint().equals("low")){
-                    sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with maint = low
+                    //sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with maint = low
+                    sortedData[0].add(tempcar);
                 }else if(tempcar.getMaint().equals("med")){
-                    sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with maint = med
+                    //sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with maint = med
+                    sortedData[1].add(tempcar);
                 }else if(tempcar.getMaint().equals("high")){
-                    sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with maint = high
+                    //sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with maint = high
+                    sortedData[2].add(tempcar);
                 }else if(tempcar.getMaint().equals("vhigh")){
-                    sortedData.get(3).add(tempcar);           // The Inside ArrayList with index 3 contains all the cars with maint = vhigh
+                    //sortedData.get(3).add(tempcar);           // The Inside ArrayList with index 3 contains all the cars with maint = vhigh
+                    sortedData[3].add(tempcar);
                 }
 
             }else if(attribute.equals("doors")){
 
                 if(tempcar.getDoors().equals("2")){
-                    sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with doors = 2
+                    //sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with doors = 2
+                    sortedData[0].add(tempcar);
                 }else if(tempcar.getDoors().equals("3")){
-                    sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with doors = 3
+                    //sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with doors = 3
+                    sortedData[1].add(tempcar);
                 }else if(tempcar.getDoors().equals("4")){
-                    sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with doors = 4
+                    //sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with doors = 4
+                    sortedData[2].add(tempcar);
                 }else if(tempcar.getDoors().equals("5-more")){
-                    sortedData.get(3).add(tempcar);           // The Inside ArrayList with index 3 contains all the cars with doors = 5-more
+                    //sortedData.get(3).add(tempcar);           // The Inside ArrayList with index 3 contains all the cars with doors = 5-more
+                    sortedData[3].add(tempcar);
                 }
 
             }else if(attribute.equals("persons")){
 
                 if(tempcar.getPersons().equals("2")){
-                    sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with persons = 2
+                    //sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with persons = 2
+                    sortedData[0].add(tempcar);
                 }else if(tempcar.getPersons().equals("4")){
-                    sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with persons = 4
+                    //sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with persons = 4
+                    sortedData[1].add(tempcar);
                 }else if(tempcar.getPersons().equals("more")){
-                    sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with persons = more
+                    //sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with persons = more
+                    sortedData[2].add(tempcar);
                 }
 
             }else if(attribute.equals("lug_boot")){
 
                 if(tempcar.getLug_boot().equals("small")){
-                    sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with lug_boot = small
+                    //sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with lug_boot = small
+                    sortedData[0].add(tempcar);
                 }else if(tempcar.getLug_boot().equals("med")){
-                    sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with lug_boot = med
+                    //sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with lug_boot = med
+                    sortedData[1].add(tempcar);
                 }else if(tempcar.getLug_boot().equals("big")){
-                    sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with lug_boot = big
+                    //sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with lug_boot = big
+                    sortedData[2].add(tempcar);
                 }
 
             }else if(attribute.equals("safety")){
 
                 if(tempcar.getLug_boot().equals("low")){
-                    sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with safety = low
+                    //sortedData.get(0).add(tempcar);           // The Inside ArrayList with index 0 contains all the cars with safety = low
+                    sortedData[0].add(tempcar);
                 }else if(tempcar.getLug_boot().equals("med")){
-                    sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with safety = med
+                    //sortedData.get(1).add(tempcar);           // The Inside ArrayList with index 1 contains all the cars with safety = med
+                    sortedData[1].add(tempcar);
                 }else if(tempcar.getLug_boot().equals("high")){
-                    sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with safety = high
+                    //sortedData.get(2).add(tempcar);           // The Inside ArrayList with index 2 contains all the cars with safety = high
+                    sortedData[2].add(tempcar);
                 }
 
             }
@@ -209,23 +234,31 @@ public class Main {
         double [] P = new double[attributeValues.size()]; //We will store the probality of each value of an attribute
         double [] H = new double[attributeValues.size()]; //We will store the entropy of each data set with specific value
         double IG = entropy;
-
+        System.out.println(" started H[C] :"+IG);
         for(int i = 0; i < attributeValues.size(); i++){
-            P[i] = sortedData.get(i).size() / data.size();//This is P(X=x) on the type where X:atribute, x:value
-            H[i] = calcEntropy(sortedData.get(i));        //This is H(C|X=x) on the type where X:atribute, x:value
+
+            //P[i] = sortedData.get(i).size() / data.size();//This is P(X=x) on the type where X:atribute, x:value
+            P[i] = sortedData[i].size() / data.size();
+            System.out.println("P[i] :"+P[i]);
+            //H[i] = calcEntropy(sortedData.get(i));        //This is H(C|X=x) on the type where X:atribute, x:value
+            H[i] = calcEntropy(sortedData[i]);
+            System.out.println("H[i] :"+H[i]);
             IG -= P[i] * H[i];                            //IG(C,X) = H(C) - Σ P(X=x)*H(C|X=x)
         }
+        //System.out.println(IG);
 
         return IG;
     }
 
    //returns the attribute with the max InformationGain in this set of data
     public static String maxIG(ArrayList<Car> data, ArrayList<String> attributes){
+        System.out.println("maxIG");
         ArrayList<Double> attributesIG = new ArrayList<Double>();
         for(int i = 0; i < attributes.size(); i++){
             attributesIG.add(calcIG(data, attributes.get(i)));
         }
         double maxIG = Collections.max(attributesIG);
+        //System.out.println(maxIG);
         return attributes.get(attributesIG.indexOf(maxIG));
     }
 

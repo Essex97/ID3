@@ -6,7 +6,7 @@ import java.util.Collections;
 public class Main {
 
     public static void main(String[]args){
-        ArrayList<Car> data = readFile("car1.txt");
+        ArrayList<Car> data = readFile("car.data");
 
         ArrayList<String> attributes = new ArrayList<String>();
         attributes.add("buying");
@@ -16,12 +16,59 @@ public class Main {
         attributes.add("lug_boot");
         attributes.add("safety");
 
-        String defaultCategory = "good";
+        String defaultCategory = null;
 
-        Node root = new Node(data, null, false);
+        Node root = new Node(data, null, false, null, null);
 
         ID3(data, root, attributes, defaultCategory);
 
+        print_tree(root);
+
+        Car car = new Car("low","low","5more","4","med","med");
+        predict(car, root);
+    }
+
+    public static void print_tree(Node root){
+        if(root != null ){
+            System.out.print("attribute: "+root.getAttribute() +", value :"+ root.getValueOfAtrr() +", CATEGORY: "+root.getLabel());
+            System.out.println("\n--------------------------------------------------------");
+            if(root.getChildren() != null){
+                for(int j = 0; j<root.getChildren().size(); j++){
+                    System.out.print("attribute: "+root.getChildren().get(j).getAttribute() +", value :"+ root.getChildren().get(j).getValueOfAtrr() +", CATEGORY: "+root.getChildren().get(j).getLabel()+" | ");
+                }
+                System.out.println("\n--------------------------------------------------------");
+                for(int j = 0; j<root.getChildren().size(); j++){
+                    if(root.getChildren().get(j).isLeaf())
+                        continue;
+                    print_tree(root.getChildren().get(j));
+                }
+            }
+        }
+    }
+
+    public static int predict(Car car, Node root){
+        if(root == null){
+            System.out.println("Our tree is null");
+            return 0;
+        }else if(root.isLeaf()){
+            System.out.println("The car belongs to "+root.getLabel()+".");
+            return 0;
+        }
+
+        String attributeVal = car.getValueOf(root.getAttribute());
+        for(int j = 0; j<root.getChildren().size(); j++){
+            if(root.getChildren().get(j).getValueOfAtrr().equals(attributeVal) && root.getChildren().get(j).isLeaf()){
+                System.out.println("The car belongs to "+root.getChildren().get(j).getLabel()+".");
+                return 0;
+            }
+
+        }
+        for(int j = 0; j<root.getChildren().size(); j++) {
+            if(root.getChildren().get(j).isLeaf()) //That means tha the node is Leaf bute the vaue of the attribute on the given car are not the same
+                continue;
+            predict(car, root.getChildren().get(j));
+        }
+        return 0;
     }
 
     public static String ID3 (ArrayList<Car> data, Node root, ArrayList<String> attributes, String defaultCategory){
@@ -38,49 +85,45 @@ public class Main {
                     count++;
             }
             if(count == data.size()) {
+                root.setLeaf(true);
                 root.setLabel(root.getData().get(0).getCategory());
                 return root.getLabel();
             }
 
         }
 
-        if(attributes == null){ //if we don't have attributes we return the most recent category of the data
+        int countUnacc = 0;
+        int countAcc = 0;
+        int countGood = 0;
+        int countVgood = 0;
 
-            int countUnacc = 0;
-            int countAcc = 0;
-            int countGood = 0;
-            int countVgood = 0;
+        for(Car temp : data){
+            if (temp.getCategory().equals("unacc"))
+                countUnacc++;
+            else if (temp.getCategory().equals("acc"))
+                countAcc++;
+            else if (temp.getCategory().equals("good"))
+                countGood++;
+            else if (temp.getCategory().equals("vgood"))
+                countVgood++;
+        }
 
-            for(Car temp : data){
-                if (temp.getCategory().equals("unacc"))
-                    countUnacc++;
-                else if (temp.getCategory().equals("acc"))
-                    countAcc++;
-                else if (temp.getCategory().equals("good"))
-                    countGood++;
-                else if (temp.getCategory().equals("vgood"))
-                    countVgood++;
-            }
+        int max = Math.max(countUnacc, Math.max(countAcc, Math.max(countGood, countVgood)));
 
-            int max = Math.max(countUnacc, Math.max(countAcc, Math.max(countGood, countVgood)));
+        if(max == countUnacc)
+            defaultCategory = "unacc";
+        else if(max == countAcc)
+            defaultCategory = "acc";
+        else if(max == countGood)
+            defaultCategory = "good";
+        else
+            defaultCategory = "vgood";
 
-            if(max == countUnacc){
-                root.setLabel("unacc");
-                return root.getLabel();
-            }
-            else if(max == countAcc){
-                root.setLabel("acc");
-                return root.getLabel();
-            }
-            else if(max == countGood) {
-                root.setLabel("good");
-                return root.getLabel();
-            }
-            else {
-                root.setLabel("vgood");
-                return root.getLabel();
-            }
 
+        if(attributes == null || attributes.size() == 0){ //if we don't have attributes we return the most recent category of the data
+            root.setLabel(defaultCategory);
+            root.setLeaf(true);
+            return root.getLabel();
         }
 
         String bestAttribute = maxIG(data, attributes);
@@ -91,7 +134,6 @@ public class Main {
 
         ArrayList<String> valuesOfBestAttr = getAttributeValues(bestAttribute);
 
-        ArrayList<String> tree = new ArrayList<String>();
 
         ArrayList<Car> examples;
 
@@ -104,15 +146,13 @@ public class Main {
                     examples.add(tempcar);
 
             }
-            Node newRoot = new Node(examples, bestAttribute, false);  //Mhpws prepei na valv kai kana value of best attribute edv
-            System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            Node children = new Node(examples, null, false, bestAttribute, value);
+            System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+            root.setChildren(children);
+            ID3(examples, children, attributes, defaultCategory);
 
-            //return ID3(examples, newRoot, attributes, "good"); //Mhpvw edv sto default prepei na mpei h pio syxnh katigoria
-            tree.add(ID3(examples, newRoot, attributes, "good"));
-            System.out.println(value);
-        }
-        for(int i = 0; i < tree.size(); i++){
-            System.out.println(tree.get(i));
+            //tree.add(ID3(examples, newRoot, attributes, "good"));
+            //System.out.println(value);
         }
         return null;
     }

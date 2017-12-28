@@ -20,6 +20,16 @@ public class Car {
         this.category = category;
     }
 
+    public Car(String buying, String maint, String doors, String persons, String lug_boot, String safety) {
+        this.buying = buying;
+        this.maint = maint;
+        this.doors = doors;
+        this.persons = persons;
+        this.lug_boot = lug_boot;
+        this.safety = safety;
+        this.category = category;
+    }
+
     //-----------------Getters-----------------//
     public String getBuying() {
         return buying;

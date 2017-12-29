@@ -1,12 +1,32 @@
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 public class Main {
 
     public static void main(String[]args){
         ArrayList<Car> data = readFile("car.data");
+        if(data != null) Collections.shuffle(data);
+
+        double trainSize = ((double)data.size()/100)*80;
+
+        ArrayList<Car> train = new ArrayList<Car>();
+        for(int i = 0; i < trainSize - 1; i++){
+            train.add(data.get(i));
+        }
+
+        double validateSize = ((double)data.size()/100)*10;
+
+        ArrayList<Car> validate = new ArrayList<Car>();
+        for(int i = (int)trainSize; i < trainSize + validateSize - 1; i++){
+            validate.add(data.get(i));
+        }
+
+        ArrayList<Car> test = new ArrayList<Car>();
+        for(int i = (int)(trainSize + validateSize); i < data.size(); i++){
+            test.add(data.get(i));
+        }
+
 
         ArrayList<String> attributes = new ArrayList<String>();
         attributes.add("buying");
@@ -15,67 +35,24 @@ public class Main {
         attributes.add("persons");
         attributes.add("lug_boot");
         attributes.add("safety");
+        Node root = new Node(train, null, false, null, null);
 
-        String defaultCategory = null;
+        ID3(train, root, attributes, null); //Trainings the algorithm with train data
 
-        Node root = new Node(data, null, false, null, null);
-
-        ID3(data, root, attributes, defaultCategory);
+        System.out.println("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 
         print_tree(root);
 
-        Car car = new Car("low","low","5more","4","med","med");
-        predict(car, root);
+        test(test, root); //Testing the algorithm with test data
+
     }
 
-    public static void print_tree(Node root){
-        if(root != null ){
-            System.out.print("attribute: "+root.getAttribute() +", value :"+ root.getValueOfAtrr() +", CATEGORY: "+root.getLabel());
-            System.out.println("\n--------------------------------------------------------");
-            if(root.getChildren() != null){
-                for(int j = 0; j<root.getChildren().size(); j++){
-                    System.out.print("attribute: "+root.getChildren().get(j).getAttribute() +", value :"+ root.getChildren().get(j).getValueOfAtrr() +", CATEGORY: "+root.getChildren().get(j).getLabel()+" | ");
-                }
-                System.out.println("\n--------------------------------------------------------");
-                for(int j = 0; j<root.getChildren().size(); j++){
-                    if(root.getChildren().get(j).isLeaf())
-                        continue;
-                    print_tree(root.getChildren().get(j));
-                }
-            }
-        }
-    }
 
-    public static int predict(Car car, Node root){
-        if(root == null){
-            System.out.println("Our tree is null");
-            return 0;
-        }else if(root.isLeaf()){
-            System.out.println("The car belongs to "+root.getLabel()+".");
-            return 0;
-        }
-
-        String attributeVal = car.getValueOf(root.getAttribute());
-        for(int j = 0; j<root.getChildren().size(); j++){
-            if(root.getChildren().get(j).getValueOfAtrr().equals(attributeVal) && root.getChildren().get(j).isLeaf()){
-                System.out.println("The car belongs to "+root.getChildren().get(j).getLabel()+".");
-                return 0;
-            }
-
-        }
-        for(int j = 0; j<root.getChildren().size(); j++) {
-            if(root.getChildren().get(j).isLeaf()) //That means tha the node is Leaf bute the vaue of the attribute on the given car are not the same
-                continue;
-            predict(car, root.getChildren().get(j));
-        }
-        return 0;
-    }
-
-    public static String ID3 (ArrayList<Car> data, Node root, ArrayList<String> attributes, String defaultCategory){
+    private static void ID3 (ArrayList<Car> data, Node root, ArrayList<String> attributes, String defaultCategory){
 
         if(root.getData() == null || root.getData().size() == 0 ){
 
-            return defaultCategory;
+            return;
 
         }else{ //if all the instances of the data belongs at the same category return this category
 
@@ -87,7 +64,7 @@ public class Main {
             if(count == data.size()) {
                 root.setLeaf(true);
                 root.setLabel(root.getData().get(0).getCategory());
-                return root.getLabel();
+                return;
             }
 
         }
@@ -123,7 +100,7 @@ public class Main {
         if(attributes == null || attributes.size() == 0){ //if we don't have attributes we return the most recent category of the data
             root.setLabel(defaultCategory);
             root.setLeaf(true);
-            return root.getLabel();
+            return;
         }
 
         String bestAttribute = maxIG(data, attributes);
@@ -133,7 +110,6 @@ public class Main {
         System.out.println("Best attribute: "+ bestAttribute);
 
         ArrayList<String> valuesOfBestAttr = getAttributeValues(bestAttribute);
-
 
         ArrayList<Car> examples;
 
@@ -146,20 +122,16 @@ public class Main {
                     examples.add(tempcar);
 
             }
+
             Node children = new Node(examples, null, false, bestAttribute, value);
-            System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
             root.setChildren(children);
             ID3(examples, children, attributes, defaultCategory);
-
-            //tree.add(ID3(examples, newRoot, attributes, "good"));
-            //System.out.println(value);
         }
-        return null;
     }
 
     //returns the entropy of the given set of data
-    public static double calcEntropy(ArrayList<Car> data){
-        System.out.println("entropy method");
+    private static double calcEntropy(ArrayList<Car> data){
+
         if(data.size() == 0){
             return 100000; //return something too high
         }else{
@@ -180,11 +152,13 @@ public class Main {
             }
 
             //We will store the probality of an instance belonging to each category
-            //P[i] = P[C=c]
             double [] P = new double[4];
+            //P[i] = P[C=c]
             for(int i = 0; i < 4; i++){
+
                 P[i] = ((double)sumOfEachCategory[i])/data.size();
                 System.out.println("P[i]: "+P[i]);
+
             }
 
             double entropy = 0;
@@ -199,23 +173,23 @@ public class Main {
             return entropy;
         }
     }
+
     //calculate log with base 2 of x
-    public static double log2(double x)
+    private static double log2(double x)
     {
         return (Math.log(x)/Math.log(2));
     }
 
+
     //returns the InformationGain of this attribute
     //remember IG(C,X) = H(C) - ΣP(X=x)*H(C|X=x) where H is entropy and C the category
-    public static double calcIG(ArrayList<Car> data, String attribute){
-        //System.out.println("IG");
+    private static double calcIG(ArrayList<Car> data, String attribute){
+
         double entropy = calcEntropy(data); //This is H(C) on the type
 
         ArrayList<String> attributeValues = getAttributeValues(attribute); //Values of the given attribute
-        System.out.println("values size "+attributeValues.size());
+        ArrayList<Car> [] sortedData = new ArrayList[attributeValues.size()];   //Data sorted by value of the given attribute
 
-        //ArrayList<ArrayList<Car>> sortedData = new ArrayList<ArrayList<Car>>(); //Data sorted by value of the given attribute
-        ArrayList<Car> [] sortedData = new ArrayList[attributeValues.size()]; //4 is the max sum of values
         for (int i = 0; i < sortedData.length; i++) {
             sortedData[i] = new ArrayList<>();
         }
@@ -296,19 +270,14 @@ public class Main {
         double [] P = new double[attributeValues.size()]; //We will store the probality of each value of an attribute
         double [] H = new double[attributeValues.size()]; //We will store the entropy of each data set with specific value
         double IG = entropy;
-        System.out.println(" started H[C] :"+IG);
 
         for(int i = 0; i < attributeValues.size(); i++){
             System.out.println("attribute: "+attribute +", attribute value: "+attributeValues.get(i));
             if (sortedData[i].size() == 0) continue;
 
-            System.out.println(sortedData[i].size() +", "+ data.size());
             P[i] = ((double)sortedData[i].size()) / data.size(); //This is P(X=x) on the type where X:atribute, x:value
-            System.out.println("P[i] :"+P[i]);
-
-            H[i] = calcEntropy(sortedData[i]);                 //This is H(C|X=x) on the type where X:atribute, x:value
-            System.out.println("H[i] :"+H[i]);
-            IG -= P[i] * H[i];                                 //IG(C,X) = H(C) - Σ P(X=x)*H(C|X=x)
+            H[i] = calcEntropy(sortedData[i]);                   //This is H(C|X=x) on the type where X:atribute, x:value
+            IG -= P[i] * H[i];                                   //IG(C,X) = H(C) - Σ P(X=x)*H(C|X=x)
         }
         System.out.println("IG of "+attribute +": " +IG);
 
@@ -317,21 +286,21 @@ public class Main {
 
 
    //returns the attribute with the max InformationGain in this set of data
-    public static String maxIG(ArrayList<Car> data, ArrayList<String> attributes){
-        //System.out.println("maxIG");
+    private static String maxIG(ArrayList<Car> data, ArrayList<String> attributes){
+
         ArrayList<Double> attributesIG = new ArrayList<Double>();
+
         for(int i = 0; i < attributes.size(); i++){
             attributesIG.add(calcIG(data, attributes.get(i)));
         }
         double maxIG = Collections.max(attributesIG);
-        System.out.println("INDEX "+attributesIG.indexOf(maxIG) +" max IG: "+ maxIG);
+
         return attributes.get(attributesIG.indexOf(maxIG));
     }
 
 
-
     //returns a list with the possible values of this attribute
-    public static ArrayList<String> getAttributeValues(String attribute){
+    private static ArrayList<String> getAttributeValues(String attribute){
 
         ArrayList<String> values = new ArrayList<>();
         if(attribute.equals("buying") || attribute.equals("maint")){
@@ -360,8 +329,155 @@ public class Main {
         return values;
     }
 
+    //returns an int who represent each category
+    private static int getCategoryRepresentation(String category){
+        switch (category) {
+            case "unacc": return 1;
+            case "acc": return 2;
+            case "good": return 3;
+            case "vgood": return 4;
+        }
+        return 0;
+    }
 
-    public static ArrayList<Car> readFile(String data)
+    private static void print_tree(Node root){
+        if(root != null ){
+            System.out.print("attribute: "+root.getAttribute() +", value :"+ root.getValueOfAtrr() +", CATEGORY: "+root.getLabel());
+            System.out.println("\n----------------------------------------------------------------------------");
+            if(root.getChildren() != null){
+                for(int j = 0; j<root.getChildren().size(); j++){
+                    System.out.print("attribute: "+root.getChildren().get(j).getAttribute() +", value :"+ root.getChildren().get(j).getValueOfAtrr() +", CATEGORY: "+root.getChildren().get(j).getLabel()+" | ");
+                }
+                System.out.println("\n----------------------------------------------------------------------------");
+                for(int j = 0; j<root.getChildren().size(); j++){
+                    if(root.getChildren().get(j).isLeaf())
+                        continue;
+                    print_tree(root.getChildren().get(j));
+                }
+            }
+        }
+    }
+
+    private static void test(ArrayList<Car> test, Node root){
+
+        int sqErr = 0;                  //We will use as error the square Error
+        String predictedCategory;
+
+        int sumOfCorrectPredictUnacc = 0;
+        int sumOfCorrectPredictAcc = 0;
+        int sumOfCorrectPredictGood = 0;
+        int sumOfCorrectPredictVgood = 0;
+
+        int sumOfPredictedUnacc = 0;
+        int sumOfPredictedAcc = 0;
+        int sumOfPredictedGood = 0;
+        int sumOfPredictedVgood = 0;
+
+
+        for(Car tempCar : test){        //Testing the algorithm with test data
+
+            predictedCategory = predict(tempCar, root);
+
+            if(predictedCategory == null){
+                System.out.println("Something went wrong...");
+            }else if(predictedCategory.equals(tempCar.getCategory())){
+
+                switch (tempCar.getCategory()) {
+                    case "unacc":
+                        sumOfCorrectPredictUnacc += 1;
+                        sumOfPredictedUnacc += 1 ;
+                    case "acc":
+                        sumOfCorrectPredictAcc += 1;
+                        sumOfPredictedAcc += 1;
+                    case "good":
+                        sumOfCorrectPredictGood += 1;
+                        sumOfPredictedGood += 1;
+                    case "vgood":
+                        sumOfCorrectPredictVgood += 1;
+                        sumOfPredictedVgood += 1;
+                }
+
+                continue; //it means that the prediction is true so we don't have error
+
+            }else{
+                if(predictedCategory.equals("unacc")){                                                     //predicted value: 1 => which represent unacc category
+                    sqErr += Math.pow(Math.abs(1 - getCategoryRepresentation(tempCar.getCategory())), 2);  //actual value   : getCategoreRepresentation(tempCar.getCategory())
+                    sumOfPredictedUnacc += 1;
+
+                }else if(predictedCategory.equals("acc")){                                                //predicted value: 2 => which represent acc category
+                    sqErr += Math.pow(Math.abs(2 - getCategoryRepresentation(tempCar.getCategory())), 2); //actual value   : getCategoreRepresentation(tempCar.getCategory())
+                    sumOfPredictedAcc += 1;
+
+                }else if(predictedCategory.equals("good")){                                               //predicted value: 3 => which represent good category
+                    sqErr += Math.pow(Math.abs(3 - getCategoryRepresentation(tempCar.getCategory())), 2); //actual value   : getCategoreRepresentation(tempCar.getCategory())
+                    sumOfPredictedGood += 1;
+
+                }else if(predictedCategory.equals("vgood")){                                              //predicted value: 4 => which represent vgood category
+                    sqErr += Math.pow(Math.abs(4 - getCategoryRepresentation(tempCar.getCategory())), 2); //actual value   : getCategoreRepresentation(tempCar.getCategory())
+                    sumOfPredictedVgood += 1;
+                }
+            }
+
+        }
+
+        System.out.println("\nSquare error is: "+ sqErr +"\n");
+
+        int sumOfUnacc = 0;
+        int sumOfAcc = 0;
+        int sumOfGood = 0;
+        int sumOfVgood = 0;
+
+        for(Car car : test){
+            switch (car.getCategory()) {
+                case "unacc": sumOfUnacc += 1;
+                case "acc": sumOfAcc += 1;
+                case "good": sumOfGood += 1;
+                case "vgood": sumOfVgood += 1;
+            }
+        }
+
+        System.out.println("Precision for Unacc category: "+ (double)sumOfCorrectPredictUnacc/sumOfPredictedUnacc);
+        System.out.println("Recall for Unacc category: "+ (double)sumOfCorrectPredictUnacc/sumOfUnacc+"\n");
+        System.out.println("Precision for Acc category: "+ (double)sumOfCorrectPredictAcc/sumOfPredictedAcc);
+        System.out.println("Recall for Acc category: "+ (double)sumOfCorrectPredictAcc/sumOfAcc+"\n");
+        System.out.println("Precision for Good category: "+ (double)sumOfCorrectPredictGood/sumOfPredictedGood);
+        System.out.println("Recall for Good category: "+ (double)sumOfCorrectPredictAcc/sumOfGood+"\n");
+        System.out.println("Precision for Very Good category: "+ (double)sumOfCorrectPredictVgood/sumOfPredictedVgood);
+        System.out.println("Recall for Very Good category: "+ (double)sumOfCorrectPredictVgood/sumOfVgood);
+    }
+
+    private static String predict(Car car, Node root){
+
+        if(root == null){
+            System.out.println("Our tree is null");
+            return null;
+        }else if(root.isLeaf()){
+            System.out.println("The car belongs to "+root.getLabel()+".");
+            return root.getLabel();
+        }
+
+        String attributeVal = car.getValueOf(root.getAttribute());
+
+        for(int j = 0; j<root.getChildren().size(); j++){
+
+            if(root.getChildren().get(j).getValueOfAtrr().equals(attributeVal) && root.getChildren().get(j).isLeaf()){
+                System.out.println("The car belongs to "+root.getChildren().get(j).getLabel()+".");
+                return root.getChildren().get(j).getLabel();
+            }
+
+        }
+        for(int j = 0; j<root.getChildren().size(); j++) {
+            if(root.getChildren().get(j).isLeaf()) //That means tha the node is Leaf bute the vaue of the attribute on the given car are not the same
+                continue;
+            String prediction = predict(car, root.getChildren().get(j));
+            if(prediction != null) return prediction; //if its null we continue the search on the others children
+        }
+        return null;
+    }
+
+
+
+    private static ArrayList<Car> readFile(String data)
     {
         File f = null;
         BufferedReader reader = null;
@@ -396,10 +512,9 @@ public class Main {
             System.out.println(e);
 
         } catch (NullPointerException e) {
-            System.out.println(e);
+            System.err.println(e);
         }
         return null;
     }
-
 
 }

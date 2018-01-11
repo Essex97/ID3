@@ -1,6 +1,8 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
 
@@ -37,18 +39,20 @@ public class Main {
         attributes.add("safety");
         Node root = new Node(train, null, false, null, null);
 
-        ID3(train, root, attributes, null); //Trainings the algorithm with train data
+        ID3(root, attributes, null); //Trainings the algorithm with train data
 
         System.out.println("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 
         print_tree(root);
 
-        test(test, root); //Testing the algorithm with test data
+        validate(validate, root);  //Validating the algorithm with validation data
+
+        test(test, root, true); //Testing the algorithm with test data
 
     }
 
 
-    private static void ID3 (ArrayList<Car> data, Node root, ArrayList<String> attributes, String defaultCategory){
+    private static void ID3 (Node root, ArrayList<String> attributes, String defaultCategory){
 
         if(root.getData() == null || root.getData().size() == 0 ){
 
@@ -57,11 +61,11 @@ public class Main {
         }else{ //if all the instances of the data belongs at the same category return this category
 
             int count = 0;
-            for(Car tempCar : data){
-                if (tempCar.getCategory().equals(data.get(0).getCategory()))
+            for(Car tempCar : root.getData()){
+                if (tempCar.getCategory().equals(root.getData().get(0).getCategory()))
                     count++;
             }
-            if(count == data.size()) {
+            if(count == root.getData().size()) {
                 root.setLeaf(true);
                 root.setLabel(root.getData().get(0).getCategory());
                 return;
@@ -74,7 +78,7 @@ public class Main {
         int countGood = 0;
         int countVgood = 0;
 
-        for(Car temp : data){
+        for(Car temp : root.getData()){
             if (temp.getCategory().equals("unacc"))
                 countUnacc++;
             else if (temp.getCategory().equals("acc"))
@@ -103,7 +107,7 @@ public class Main {
             return;
         }
 
-        String bestAttribute = maxIG(data, attributes);
+        String bestAttribute = maxIG(root.getData(), attributes);
         root.setAttribute(bestAttribute);
 
         attributes.remove(bestAttribute);
@@ -116,7 +120,7 @@ public class Main {
         for(String value : valuesOfBestAttr){
 
             examples = new ArrayList<Car>();
-            for(Car tempcar : data){
+            for(Car tempcar : root.getData()){
 
                 if(tempcar.getValueOf(bestAttribute).equals(value))
                     examples.add(tempcar);
@@ -125,7 +129,7 @@ public class Main {
 
             Node children = new Node(examples, null, false, bestAttribute, value);
             root.setChildren(children);
-            ID3(examples, children, attributes, defaultCategory);
+            ID3(children, attributes, defaultCategory);
         }
     }
 
@@ -358,7 +362,7 @@ public class Main {
         }
     }
 
-    private static void test(ArrayList<Car> test, Node root){
+    private static double test(ArrayList<Car> test, Node root, boolean toPrint){
 
         int sqErr = 0;                  //We will use as error the square Error
         String predictedCategory;
@@ -373,7 +377,6 @@ public class Main {
         int sumOfPredictedGood = 0;
         int sumOfPredictedVgood = 0;
 
-
         for(Car tempCar : test){        //Testing the algorithm with test data
 
             predictedCategory = predict(tempCar, root);
@@ -386,15 +389,19 @@ public class Main {
                     case "unacc":
                         sumOfCorrectPredictUnacc += 1;
                         sumOfPredictedUnacc += 1 ;
+                        break;
                     case "acc":
                         sumOfCorrectPredictAcc += 1;
                         sumOfPredictedAcc += 1;
+                        break;
                     case "good":
                         sumOfCorrectPredictGood += 1;
                         sumOfPredictedGood += 1;
+                        break;
                     case "vgood":
                         sumOfCorrectPredictVgood += 1;
                         sumOfPredictedVgood += 1;
+                        break;
                 }
 
                 continue; //it means that the prediction is true so we don't have error
@@ -436,14 +443,25 @@ public class Main {
             }
         }
 
-        System.out.println("Precision for Unacc category: "+ (double)sumOfCorrectPredictUnacc/sumOfPredictedUnacc);
-        System.out.println("Recall for Unacc category: "+ (double)sumOfCorrectPredictUnacc/sumOfUnacc+"\n");
-        System.out.println("Precision for Acc category: "+ (double)sumOfCorrectPredictAcc/sumOfPredictedAcc);
-        System.out.println("Recall for Acc category: "+ (double)sumOfCorrectPredictAcc/sumOfAcc+"\n");
-        System.out.println("Precision for Good category: "+ (double)sumOfCorrectPredictGood/sumOfPredictedGood);
-        System.out.println("Recall for Good category: "+ (double)sumOfCorrectPredictAcc/sumOfGood+"\n");
-        System.out.println("Precision for Very Good category: "+ (double)sumOfCorrectPredictVgood/sumOfPredictedVgood);
-        System.out.println("Recall for Very Good category: "+ (double)sumOfCorrectPredictVgood/sumOfVgood);
+        double accuracy = (double)(sumOfCorrectPredictAcc + sumOfCorrectPredictGood + sumOfCorrectPredictUnacc + sumOfCorrectPredictVgood)/test.size() * 100;
+
+        if(toPrint){
+            System.out.println("Precision for Unacc category: "+ (double)sumOfCorrectPredictUnacc/sumOfPredictedUnacc);
+            System.out.println("Recall for Unacc category: "+ (double)sumOfCorrectPredictUnacc/sumOfUnacc+"\n");
+
+            System.out.println("Precision for Acc category: "+ (double)sumOfCorrectPredictAcc/sumOfPredictedAcc);
+            System.out.println("Recall for Acc category: "+ (double)sumOfCorrectPredictAcc/sumOfAcc+"\n");
+
+            System.out.println("Precision for Good category: "+ (double)sumOfCorrectPredictGood/sumOfPredictedGood);
+            System.out.println("Recall for Good category: "+ (double)sumOfCorrectPredictGood/sumOfGood+"\n");
+
+            System.out.println("Precision for Very Good category: "+ (double)sumOfCorrectPredictVgood/sumOfPredictedVgood);
+            System.out.println("Recall for Very Good category: "+ (double)sumOfCorrectPredictVgood/sumOfVgood+"\n");
+
+            System.out.println("Accuracy: "+ (int)accuracy +"%");
+        }
+
+        return accuracy;
     }
 
     private static String predict(Car car, Node root){
@@ -467,7 +485,7 @@ public class Main {
 
         }
         for(int j = 0; j<root.getChildren().size(); j++) {
-            if(root.getChildren().get(j).isLeaf()) //That means tha the node is Leaf bute the vaue of the attribute on the given car are not the same
+            if(root.getChildren().get(j).isLeaf()) //That means tha the node is Leaf but the value of the attribute on the given car are not the same
                 continue;
             String prediction = predict(car, root.getChildren().get(j));
             if(prediction != null) return prediction; //if its null we continue the search on the others children
@@ -475,7 +493,46 @@ public class Main {
         return null;
     }
 
+    public static void validate(ArrayList<Car> validate, Node root){
 
+        HashMap<Node, Double> set = new HashMap<Node, Double>();
+
+        ArrayList<Node> nodesTovisit = new ArrayList<Node>();
+
+        for(int i = 0; i < root.getChildren().size(); i++){
+            nodesTovisit.add(root.getChildren().get(i));    //add all the children of the root
+        }
+
+
+        Node currentNode;
+
+        while(nodesTovisit.size() != 0){
+
+            currentNode = nodesTovisit.remove(0);
+            if(!currentNode.isLeaf()){
+
+                for(int i = 0; i < currentNode.getChildren().size(); i++){
+
+                    nodesTovisit.add(currentNode.getChildren().get(i));
+
+                }
+
+                currentNode.setLeaf(true); //prune the subtree
+                set.put(currentNode, test(validate, root, false));
+                currentNode.setLeaf(false); //restore the pruned tree so we can prune another subtree
+            }
+
+        }
+
+        double maxValue = (Collections.max(set.values()));
+        for(Map.Entry<Node, Double> entry : set.entrySet() ){
+            if(entry.getValue() == maxValue){
+                entry.getKey().setLeaf(true); //prune the subtree which gave me the max accurancy
+            }
+        }
+
+
+    }
 
     private static ArrayList<Car> readFile(String data)
     {

@@ -37,13 +37,14 @@ public class Main {
         attributes.add("persons");
         attributes.add("lug_boot");
         attributes.add("safety");
+
         Node root = new Node(train, null, false, null, null);
 
         ID3(root, attributes, null); //Trainings the algorithm with train data
 
-        System.out.println("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+        System.out.println("\n------------THE TREE--------------------------------\n");
 
-        print_tree(root);
+        print_tree(root);  //print the tree
 
         validate(validate, root);  //Validating the algorithm with validation data
 
@@ -344,24 +345,6 @@ public class Main {
         return 0;
     }
 
-    private static void print_tree(Node root){
-        if(root != null ){
-            System.out.print("attribute: "+root.getAttribute() +", value :"+ root.getValueOfAtrr() +", CATEGORY: "+root.getLabel());
-            System.out.println("\n----------------------------------------------------------------------------");
-            if(root.getChildren() != null){
-                for(int j = 0; j<root.getChildren().size(); j++){
-                    System.out.print("attribute: "+root.getChildren().get(j).getAttribute() +", value :"+ root.getChildren().get(j).getValueOfAtrr() +", CATEGORY: "+root.getChildren().get(j).getLabel()+" | ");
-                }
-                System.out.println("\n----------------------------------------------------------------------------");
-                for(int j = 0; j<root.getChildren().size(); j++){
-                    if(root.getChildren().get(j).isLeaf())
-                        continue;
-                    print_tree(root.getChildren().get(j));
-                }
-            }
-        }
-    }
-
     private static double test(ArrayList<Car> test, Node root, boolean toPrint){
 
         int sqErr = 0;                  //We will use as error the square Error
@@ -379,10 +362,10 @@ public class Main {
 
         for(Car tempCar : test){        //Testing the algorithm with test data
 
-            predictedCategory = predict(tempCar, root);
+            predictedCategory = predict(tempCar, root, toPrint);
 
             if(predictedCategory == null){
-                System.out.println("Something went wrong...");
+                if(toPrint) System.out.println("Something went wrong...");
             }else if(predictedCategory.equals(tempCar.getCategory())){
 
                 switch (tempCar.getCategory()) {
@@ -427,8 +410,6 @@ public class Main {
 
         }
 
-        System.out.println("\nSquare error is: "+ sqErr +"\n");
-
         int sumOfUnacc = 0;
         int sumOfAcc = 0;
         int sumOfGood = 0;
@@ -446,6 +427,8 @@ public class Main {
         double accuracy = (double)(sumOfCorrectPredictAcc + sumOfCorrectPredictGood + sumOfCorrectPredictUnacc + sumOfCorrectPredictVgood)/test.size() * 100;
 
         if(toPrint){
+            System.out.println("\nSquare error is: "+ sqErr +"\n");
+
             System.out.println("Precision for Unacc category: "+ (double)sumOfCorrectPredictUnacc/sumOfPredictedUnacc);
             System.out.println("Recall for Unacc category: "+ (double)sumOfCorrectPredictUnacc/sumOfUnacc+"\n");
 
@@ -464,13 +447,13 @@ public class Main {
         return accuracy;
     }
 
-    private static String predict(Car car, Node root){
+    private static String predict(Car car, Node root, Boolean toPrint){
 
         if(root == null){
             System.out.println("Our tree is null");
             return null;
         }else if(root.isLeaf()){
-            System.out.println("The car belongs to "+root.getLabel()+".");
+            if(toPrint) System.out.println("The car belongs to "+root.getLabel()+".");
             return root.getLabel();
         }
 
@@ -479,7 +462,7 @@ public class Main {
         for(int j = 0; j<root.getChildren().size(); j++){
 
             if(root.getChildren().get(j).getValueOfAtrr().equals(attributeVal) && root.getChildren().get(j).isLeaf()){
-                System.out.println("The car belongs to "+root.getChildren().get(j).getLabel()+".");
+                if(toPrint) System.out.println("The car belongs to "+root.getChildren().get(j).getLabel()+".");
                 return root.getChildren().get(j).getLabel();
             }
 
@@ -487,7 +470,7 @@ public class Main {
         for(int j = 0; j<root.getChildren().size(); j++) {
             if(root.getChildren().get(j).isLeaf()) //That means tha the node is Leaf but the value of the attribute on the given car are not the same
                 continue;
-            String prediction = predict(car, root.getChildren().get(j));
+            String prediction = predict(car, root.getChildren().get(j), toPrint);
             if(prediction != null) return prediction; //if its null we continue the search on the others children
         }
         return null;
@@ -532,6 +515,24 @@ public class Main {
         }
 
 
+    }
+
+    private static void print_tree(Node root){
+        if(root != null ){
+            System.out.print("attribute: "+root.getAttribute() +", value :"+ root.getValueOfAtrr() +", CATEGORY: "+root.getLabel());
+            System.out.println("\n----------------------------------------------------------------------------");
+            if(root.getChildren() != null){
+                for(int j = 0; j<root.getChildren().size(); j++){
+                    System.out.print("attribute: "+root.getChildren().get(j).getAttribute() +", value :"+ root.getChildren().get(j).getValueOfAtrr() +", CATEGORY: "+root.getChildren().get(j).getLabel()+" | ");
+                }
+                System.out.println("\n----------------------------------------------------------------------------");
+                for(int j = 0; j<root.getChildren().size(); j++){
+                    if(root.getChildren().get(j).isLeaf())
+                        continue;
+                    print_tree(root.getChildren().get(j));
+                }
+            }
+        }
     }
 
     private static ArrayList<Car> readFile(String data)
